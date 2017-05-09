@@ -15,6 +15,7 @@ using namespace std;
 //Chebyshev points of the first kind
 void cheby_points(double *xs,int n)
 {
+  #pragma omp parallel for simd
   for (int i=0;i<n;i++)
     xs[i] = cos(M_PI * (i+0.5)/n);
 }
@@ -27,7 +28,7 @@ void cheby_eval(double *coeffs,
                 double *ys,
                 int m)
 {
-#pragma omp parallel for
+#pragma omp parallel for simd
   for (int i=0;i<m;i++){
     double x = xs[i];
     double u0=0,u1=0,u2=0;
@@ -63,9 +64,9 @@ void cheby_interp(double *ys,int n, double *coeffs)
   
   fftw_destroy_plan(plan);
 
-  for (int k=0;k<n;k++){
-    double scale = (k==0)?(2*n):n;
-    coeffs[k] /= scale;
-  }
+  #pragma omp simd
+  for (int k=0;k<n;k++)
+    coeffs[k] /= n;
+  coeffs[0]/=2;
 }
     
