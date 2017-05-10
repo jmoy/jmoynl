@@ -28,16 +28,24 @@ void cheby_eval(double *coeffs,
                 double *ys,
                 int m)
 {
-#pragma omp parallel for simd
+  if (n==1){
+    #pragma omp parallel for simd
+    for (int i=0;i<m;i++)
+      ys[i] = coeffs[0];
+    return;
+  }
+  
+  #pragma omp parallel for simd
   for (int i=0;i<m;i++){
     double x = xs[i];
-    double u0=0,u1=0,u2=0;
-    for (int k=n;k>=0;k--){
-      u2 = u1;
-      u1 = u0;
-      u0 = 2*x*u1-u2+coeffs[k];
+    double u1 = coeffs[n-1];
+    double u2 = coeffs[n-2];
+    for (int k=n-3;k>=0;k--){
+      double t = coeffs[k]-u1;
+      u1 = u2+2*x*u1;
+      u2 = t;
     }
-    ys[i] = 0.5*(coeffs[0]+u0-u2);
+    ys[i] = x*u1+u2;
   }
 }
 
